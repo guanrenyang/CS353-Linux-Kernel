@@ -90,6 +90,23 @@ static void __exit proc_exit(void) //程序出口
 ### `proc_ops`结构
 
 `proc_ops`结构体的作用是**告诉内核：当对应的文件系统的被读取（或写入）时执行什么对应的函数**。注意：`proc_ops`是在内核版本v5.6+定义，之前版本使用`file_operations`，它比`proc_ops`有更多冗余。
+
+下面是事例代码片段：
+```c
+static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos){
+    /* TODO */
+}
+
+static ssize_t proc_write(struct file *fp, const char __user *ubuf, size_t len, loff_t *pos){
+    /* TODO */
+}
+// 暂时可以不需要关注以上两个函数的声明和实现
+// 只需要知道在读取(写入)/proc文件系统时执行proc_read(proc_write)
+static const struct proc_ops proc_ops = {   
+    .proc_read = proc_read,
+    .proc_write = proc_write,
+};
+```
 ### 操作`/proc`文件系统的内核代码
 
 https://sysprog21.github.io/lkmpg/#the-procops-structure
