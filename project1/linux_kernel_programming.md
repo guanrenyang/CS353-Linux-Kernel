@@ -1,5 +1,6 @@
 # Linux内核编程
-
+## 我的观察
+内核对全局变量的赋值先于__init函数
 ## 任务
 
 ### 任务一： 简易计算器
@@ -108,5 +109,165 @@ static const struct proc_ops proc_ops = {
 };
 ```
 ### 操作`/proc`文件系统的内核代码
+#### 在`/proc`下操作文件
 
+在`/proc`文件系统下创建文件（例如`/proc/helloworld`）需要在内核模块的*入口* 函数中使用`proc_create`函数进行创建，它返回一个结构体(struct)`proc_dir_entry`，这个文件可以被用来配置`/proc/helloworld`，如果`proc_create`返回了`NULL`就说明创建不成功。
+
+#### 用户空间和内核空间
+Linux 内存(在Intel体系结构上)是分段的，这意味着指针本身并不指向内存中的唯一位置，只指向内存段中的一个位置，而不同的内存段有不同权限。内核有一个属于内核的段，每个进程都有自己的段，他们只能访问自己的段。
+
+这一点在写单个线程的代码时无关紧要，但是在写内核代码时就需要考虑到。用户读写`/proc`文件系统时是在用户空间发出信息，换言之是将一个指向用户段的指针传给了内核，此时内核无法访问指针指向的空间，就需要使用`copy_from_user`或者`get_user`来授予内核访问权限。
+
+#### `/proc`文件系统的读写处理函数
+
+1. `proc_read()`函数在`proc_ops`结构中“注册”，会在用户读取（例如`cat`指令）`/proc`文件系统的对应模块时得到执行。需要注意的是**用户读取`/proc`时要使用`copy_to_user`将变量从内核空间移动到用户空间。**
+2. `proc_write()`函数在`proc_ops`结构中“注册”，会在用户写入（例如`echo`指令）`/proc`文件系统的对应模块的时候得到执行。需要注意的是**用户读取`/proc`时要使用`copy_from_user`或`get_user`函数将变量从用户空间移动到内核空间。**
+
+## `proc_read`函数的机制测试
+使用这一代码
+```C
+static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
+{
+    /* TODO */
+    pr_info("pos 1:%lld", *pos);
+    char s[13] = "HelloWorld!\n"; 
+    int l = sizeof(s); 
+    ssize_t ret = l; 
+    // pr_info("len: %ld", len);
+    if (*pos >= 26 || copy_to_user(ubuf, s, l)) { 
+        pr_info("pos 2:%lld", *pos);
+        pr_info("copy_to_user failed\n"); 
+        ret = 0; 
+    } else { 
+        pr_info("procfile read %s\n", fp->f_path.dentry->d_name.name); 
+        pr_info("pos 3:%lld", *pos);
+        *pos += l; 
+    } 
+    pr_info("pos 4:%lld", *pos);
+    return ret; 
+}
+```
+得到的结果为
+使用这个代码，cat没有输出，而且最后一个打印*pos的指令总是被忽略掉。
+```c
+static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
+{
+    /* TODO */
+    pr_info("pos 1:%lld", *pos);
+    char s[13] = "HelloWorld!\n"; 
+    int l = sizeof(s); 
+    ssize_t ret = l; 
+    // pr_info("len: %ld", len);
+
+    if (copy_to_user(ubuf, s, l))
+        pr_info("error");
+    *pos+=l;
+
+    pr_info("pos 2:%lld", *pos);
+
+    if (copy_to_user(ubuf, s, l))
+        pr_info("error");
+    *pos+=l;
+
+    pr_info("pos 3:%lld", *pos);
+    if(*pos>=26){
+        ret = 0;
+    }
+    pr_info("pos 4:%lld", *pos);
+    pr_info("pos 5:%lld", *pos);
+    pr_info("pos 6:%lld", *pos);
+    return 13; 
+}
+```
+使用这个代码，第一次helloworld完整插入，第二次只返回了一个H，但是使用vim打开/proc文件系统calc文件时发现两个helloworld都完整插入
+```c
+static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
+{
+    pr_info("pos 1:%lld", *pos);
+    char s[13] = "HelloWorld!\n"; 
+    int l = sizeof(s); 
+    ssize_t ret = l; 
+    /* TODO */
+    if(*pos>=26){
+        return 0;
+    }
+    if (*pos >=13)
+    {
+        copy_to_user(ubuf, s, 13);
+        *pos+=13;
+        return 1;
+    }
+    
+    copy_to_user(ubuf, s, 13);
+    *pos+=13;
+
+    return ret; 
+}
+```
+使用这个代码，可以完整插入，可见：`proc_read`的返回值很关键
+```c
+static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
+{
+    pr_info("pos 1:%lld", *pos);
+    char s[13] = "HelloWorld!\n"; 
+    int l = sizeof(s); 
+    ssize_t ret = l; 
+    /* TODO */
+    if(*pos>=26){
+        return 0;
+    }
+    if (*pos >=13)
+    {
+        copy_to_user(ubuf, s, 13);
+        *pos+=13;
+        return ret;
+    }
+    
+    copy_to_user(ubuf, s, 13);
+    *pos+=13;
+
+    return ret; 
+}
+```
+使用这个代码，*pos的输出正常，但是cat只输出一行helloworld，vim查看calc中有14个换行符ctrl @（1个来自第一个helloworld\n）。猜想proc_read的返回值表示本次copy了多少个字节。
+```c
+static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
+{
+    pr_info("pos 1:%lld", *pos);
+    char s[13] = "HelloWorld!\n"; 
+    int l = sizeof(s); 
+    ssize_t ret = l; 
+    // pr_info("len: %ld", len);
+    if(*pos>=26){
+        ret = 0;
+        return 0;
+    }
+    if (copy_to_user(ubuf, s, l))
+        pr_info("error");
+    *pos+=l;
+
+    pr_info("pos 2:%lld", *pos);
+
+    if (copy_to_user(ubuf, s, l))
+        pr_info("error");
+    *pos+=l;
+
+    pr_info("pos 3:%lld", *pos);
+    
+    pr_info("pos 4:%lld", *pos);
+    pr_info("pos 5:%lld", *pos);
+    pr_info("pos 6:%lld", *pos);
+    return 26; 
+}
+```
+## 一些要点
+1. 输出的时候要把int转为char再输出，可以使用snpirntf来格式化输出到字符串
+2. 不能返回-EFAULT，不知道调用者会得到错误码以后会干什么（问老师）
+3. read要返回0，write不能返回0
+4. proc_write会导致最后带有一个'\n'，len变量也计算了这个换行符，需要在 `copy\_from\_user` 以后显示换为'\0'，len=有效长度+'\0'的长度。strlen会计入\0
+5. linux内核中的整数和字符串转换函数[link](https://www.cnblogs.com/pengdonglin137/articles/4125746.html)
+
+**最大的问题：proc_read提前return了但是后面的还是得到执行**
+**第一次cat的时候，pr_err语句得不到执行**
+**为什么官方代码不直接返回0，而是等到第二次再返回0；即为什么proc_read一定要执行两次**
 https://sysprog21.github.io/lkmpg/#the-procops-structure
