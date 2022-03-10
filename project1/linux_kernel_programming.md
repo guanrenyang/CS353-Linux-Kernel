@@ -7,7 +7,7 @@
 1. 编写带命令行参数的内核模块
 2. 可以通过`\proc`文件系统进行*读取* 和*写入*
 
-### 任务二： 模拟ps指令
+
 
 ## Linux 内核代码结构
 
@@ -271,3 +271,7 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
 **第一次cat的时候，pr_err语句得不到执行**
 **为什么官方代码不直接返回0，而是等到第二次再返回0；即为什么proc_read一定要执行两次**
 https://sysprog21.github.io/lkmpg/#the-procops-structure
+
+### 任务二： 模拟ps指令
+1. opendir()用来打开参数name 指定的目录, 并返回DIR*形态的目录流, 和open()类似, 接下来对目录的读取和搜索都要使用此返回值.
+2. dirent.h使用[link](https://blog.csdn.net/dream_allday/article/details/75243818)
