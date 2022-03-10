@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "dirent.h": "c",
+        "features.h": "c",
+        "ctype.h": "c",
+        "types.h": "c"
+    }
+}
