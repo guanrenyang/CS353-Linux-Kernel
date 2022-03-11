@@ -17,6 +17,10 @@ int main(void)
 
     /*** readdir ***/
     struct dirent * filename;
+    
+    // 输出标题
+    printf("%5s %c %s\n","PID", 'S', "CMD");
+
     while ((filename = readdir(dir_pointer)))
     {
         if(filename->d_name[0]<'0' || filename->d_name[0]>'9'||strlen(filename->d_name)>6) // 跳过不是进程的文件

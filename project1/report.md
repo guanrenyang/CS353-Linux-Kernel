@@ -194,13 +194,66 @@ _注意：while中的赋值语句一定要再用一个括号括起来，这是�
 
 ### 任务一
 
+`proc_init`
+1. 在`/proc`下创建以学号命名的路径: `proc_mkdir`
+2. 在`/proc/519021911058`下创建创建文件`calc`: `proc_create`
+3. 返回`0`, 表示成功初始化模块
 
+`proc_exit`
+1. 删除`/proc/519021911058`整个路径: `proc_remove`
 
+`proc_read`
+1. *递归结束判断*：如果偏移量`*pos`超过了应输出字符长度，表示读取完成，则打印日志并返回
+2. 判断操作符`operator`，执行对应操作或输出错误信息
+3. 将计算出来的结果（int数组）转换为字符串
+4. 计算输出字符串的长度`out_len`
+5. 将结果从内核空间拷贝到用户空间并自增偏移量`*pos`: `copy_to_user`
+
+`proc_write`
+1. 定义本地字符串并将输入从用户空间拷贝到内核空间: `copy_from_user`
+2. 处理拷贝后的字符串
+3. 将字符串转为整数`int`并赋值给操作数1 `operand1`: `simple_strtoll`
 ### 任务二
+1. 定义`DIR*`并使用`opendir()`函数打开`/proc`路径. 
+
+2. 重复使用`readdir()`函数读取路径下的文件名，即执行如下循环。循环完成后执行5.输出进程信息
+```c
+while (/*读取/proc下的一个文件*/) {
+    /*处理 `/proc`下的每个文件*/
+}
+```
+
+3. 对于2.中的每一个循环读取到的文件名，首先判断它是不是一个代表进程的路径，如果不是则进行下一次循环，如果是则执行4.
+
+4. 从`cmdline`文件中读取命令行信息，从status文件中读取状态`State`和文件名`Name`. 
+
+5. 输出进程信息。输出时判断cmdline中读取到的内容是否为空，不为空则输出，为空则输出[\<Name\>]
+
+
+## 遇到的问题及解决方案
+
+1. 内核中无法使用`atoi`和`iota`，可以使用`snprintf`和`simple_strtoll`（及其一系列函数[link](https://www.cnblogs.com/pengdonglin137/articles/4125746.html)）来替代。
+2. 错误判断时不能返回-EFAULT，因为不知道调用者会得到错误码以后会干什么。可以使用`pr_err`打印错误信息后正常返回。
+3. `proc_read`要返回0，`proc_write`不能返回0，否则都会持续执行
+4. proc_write会导致最后带有一个'\n'，len变量也计算了这个换行符，需要在 `copy\_from\_user` 以后显示换为'\0'，len=有效长度+'\0'的长度。strlen会计入\0
+5. `cmdline`中会将字符串不分行存储，例如`"string1\0string2\0"`，需要按字符读取并使用空格替换`'\0'`。
+
+**最大的问题：proc_read提前return了但是后面的还是得到执行**
+**第一次cat的时候，pr_err语句得不到执行**
+**为什么官方代码不直接返回0，而是等到第二次再返回0；即为什么proc_read一定要执行两次**
+https://sysprog21.github.io/lkmpg/#the-procops-structure
+
 
 ## `proc_read`函数的机制测试
 
-使用这一代码
+> 我在学习`proc_read`的机制时并未找到讲解清楚的文档，[The Linux Kernel Module Programming Guide](https://sysprog21.github.io/lkmpg/#the-procops-structure)中也没有系统如何调用`proc_read`的整个机制的讲解。于是我不得不多次实验来探索`proc_read`的运行机制。
+
+> 但是，我在运行时遇到了一些无法理解的情况，因此记录在下。
+
+_**异常情况可以总结为**_
+1. `proc_read`返回了以后，`return`之后的`pr_info`会在下一次`cat`的时候得到执行
+2. 无法在一次`proc_read`中两次使用`copy_to_user`
+3. 猜想`proc_read`的返回值表示读取的总字节数。因此不能第一次`proc_read`就返回0，而要先返回总字节数，然后系统会再调用一次`proc_read`，此时再返回0。是否返回0通过`*pos`来判断。
 
 ```C
 static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
@@ -224,14 +277,24 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
     return ret; 
 }
 ```
+按序执行
+```shell
+sudo insmod calc.ko
+cat /proc/519021911058/calc 
+dmesg #观察到正常退出，最后一个输出为pos2
+cat /proc/519021911058/cal 
+dmesg # 观察到先输出了pos4，然后再输出pos1。提前return了但是后面的pr_info依然得到执行
+```
 
-得到的结果为
 使用这个代码，cat没有输出，而且最后一个打印*pos的指令总是被忽略掉。
 
 ```c
 static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
 {
     /* TODO */
+    if(*pos>=26){
+        return 0
+    }
     pr_info("pos 1:%lld", *pos);
     char s[13] = "HelloWorld!\n"; 
     int l = sizeof(s); 
@@ -249,18 +312,26 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
     *pos+=l;
 
     pr_info("pos 3:%lld", *pos);
-    if(*pos>=26){
-        ret = 0;
-    }
+    
     pr_info("pos 4:%lld", *pos);
     pr_info("pos 5:%lld", *pos);
     pr_info("pos 6:%lld", *pos);
-    return 13; 
+    return 26; 
+    // 猜想proc_read的return代表了一次copy_to_user的总大小【猜的不对】
+    // 使用vim打开calc后观察到是一串[helloworld^@]后面跟了13个^@
 }
 ```
+按序执行
+```shell
+sudo insmod calc.ko
+cat /proc/519021911058/calc # 观察到只输出了一个hellowworld
+dmesg #观察pos6没有输出
+cat /proc/519021911058/cal # 观察到只输出了一个hellowworld
+dmesg # 观察到先输出了pos6，然后再输出pos1
+```
 
-使用这个代码，第一次helloworld完整插入，第二次只返回了一个H，但是使用vim打开/proc文件系统calc文件时发现两个helloworld都完整插入
 
+使用这个代码:
 ```c
 static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
 {
@@ -276,7 +347,7 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
     {
         copy_to_user(ubuf, s, 13);
         *pos+=13;
-        return 1;
+        return 1; // 主要问题应该在这里，这也是我猜想proc_read返回值表示一次从user，copy到kernel的字节数的原因
     }
     
     copy_to_user(ubuf, s, 13);
@@ -285,8 +356,9 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
     return ret; 
 }
 ```
+第一次helloworld完整插入，第二次只返回了一个H，但是使用vim打开/proc文件系统calc文件时发现两个helloworld都完整插入
 
-使用这个代码，可以完整插入，可见：`proc_read`的返回值很关键
+使用这个代码
 
 ```c
 static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
@@ -312,54 +384,4 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
     return ret; 
 }
 ```
-
-使用这个代码，*pos的输出正常，但是cat只输出一行helloworld，vim查看calc中有14个换行符ctrl @（1个来自第一个helloworld\n）。猜想proc_read的返回值表示本次copy了多少个字节。
-
-```c
-static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t *pos)
-{
-    pr_info("pos 1:%lld", *pos);
-    char s[13] = "HelloWorld!\n"; 
-    int l = sizeof(s); 
-    ssize_t ret = l; 
-    // pr_info("len: %ld", len);
-    if(*pos>=26){
-        ret = 0;
-        return 0;
-    }
-    if (copy_to_user(ubuf, s, l))
-        pr_info("error");
-    *pos+=l;
-
-    pr_info("pos 2:%lld", *pos);
-
-    if (copy_to_user(ubuf, s, l))
-        pr_info("error");
-    *pos+=l;
-
-    pr_info("pos 3:%lld", *pos);
-    
-    pr_info("pos 4:%lld", *pos);
-    pr_info("pos 5:%lld", *pos);
-    pr_info("pos 6:%lld", *pos);
-    return 26; 
-}
-```
-
-## 一些要点
-
-1. 输出的时候要把int转为char再输出，可以使用snpirntf来格式化输出到字符串
-2. 不能返回-EFAULT，不知道调用者会得到错误码以后会干什么（问老师）
-3. read要返回0，write不能返回0
-4. proc_write会导致最后带有一个'\n'，len变量也计算了这个换行符，需要在 `copy\_from\_user` 以后显示换为'\0'，len=有效长度+'\0'的长度。strlen会计入\0
-5. linux内核中的整数和字符串转换函数[link](https://www.cnblogs.com/pengdonglin137/articles/4125746.html)
-
-**最大的问题：proc_read提前return了但是后面的还是得到执行**
-**第一次cat的时候，pr_err语句得不到执行**
-**为什么官方代码不直接返回0，而是等到第二次再返回0；即为什么proc_read一定要执行两次**
-https://sysprog21.github.io/lkmpg/#the-procops-structure
-
-### 任务二： 模拟ps指令
-
-1. opendir()用来打开参数name 指定的目录, 并返回DIR*形态的目录流, 和open()类似, 接下来对目录的读取和搜索都要使用此返回值.
-2. dirent.h使用[link](https://blog.csdn.net/dream_allday/article/details/75243818)
+可以完整插入。`proc_read`的返回值很关键。
