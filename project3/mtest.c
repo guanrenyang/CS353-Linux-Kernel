@@ -1,8 +1,9 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/sched.h>
+#include <linux/highmem.h>
+#include <linux/page_ref.h>
 #include <asm/page.h>
-#include <linux/pgtable.h>
 #include <linux/mm_types.h>
 #include <linux/pid.h>
 #include <linux/proc_fs.h>
@@ -63,7 +64,7 @@ static ssize_t proc_write(struct file *fp, const char __user *ubuf, size_t len, 
     char operator = buffer[0];
     int pid = 0;
     unsigned long address = 0;
-    int content = 0;
+    char content = 0;
 
     int i;
     for (i=2;buffer[i]!=' ';i++){ // buffer[0] is 'r' or 'w', buffer[1] is space
@@ -80,7 +81,7 @@ static ssize_t proc_write(struct file *fp, const char __user *ubuf, size_t len, 
         for (;buffer[i]!='\0';i++){
             content = content*10 + (buffer[i]-'0');
         }
-        pr_info("%c %d %lx %d", operator, pid, address, content);
+        pr_info("%c %d %lx %d", operator, pid, address, (int)content);
     } else {
         pr_info("%c %d %lx", operator, pid, address);
     }
@@ -124,6 +125,24 @@ static ssize_t proc_write(struct file *fp, const char __user *ubuf, size_t len, 
 	}
     
     struct page *page = pte_page(*pte);
+    if(page == NULL)
+    {
+        pr_alert("page is null\n");
+    }
+    
+    void* base = (unsigned long) kmap_local_page(page);
+
+    char* dest_addr = ((unsigned long)base & PAGE_MASK) | (address & ~PAGE_MASK); // PAGE_MASK = 0xfffff000
+    if (operator=='w')
+    {
+        *dest_addr  = content;
+    } else if (operator=='r') {
+        sprintf(output,"%d", (int)(*dest_addr));
+        out_len = strlen(output);
+    }
+    
+    kunmap_local(base);
+
     return len;
 } 
 

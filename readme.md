@@ -6,6 +6,6 @@
 
 1. Project1，[内核模块以及 /proc 文件系统编程练习](https://github.com/guanrenyang/CS353-Linux-Kernel/tree/main/project1)。 
 
-2. Project2，[进程调度+修改内核源码](https://github.com/guanrenyang/CS353-Linux-Kernel/tree/main/project2)。
-3. Project3，未定。
+2. Project2，[进程调度](https://github.com/guanrenyang/CS353-Linux-Kernel/tree/main/project2)。
+3. Project3，内存管理。
 4. Project4，未定。
