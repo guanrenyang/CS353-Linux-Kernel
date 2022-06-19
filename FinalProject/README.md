@@ -14,3 +14,8 @@ tid和tid的区别：
 
 <img src="https://michael-picgo.obs.cn-east-3.myhuaweicloud.com/image-20220617162139845.png" alt="image-20220617162139845" style="zoom:67%;" />
 
+If pmd is NULL, pte is also NULL.
+
+When ptep is none, ptep_test_and_clear_young(ptep)=0.
+
+模块无法访问kernel路径下的文件
