@@ -1,0 +1,6 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/renyang/CS353-Linux-Kernel/FinalProject'
+ 
+make -C /lib/modules/5.13.0-51-generic/build M=/home/renyang/CS353-Linux-Kernel/FinalProject modules
+make: Leaving directory '/home/renyang/CS353-Linux-Kernel/FinalProject'
+ 

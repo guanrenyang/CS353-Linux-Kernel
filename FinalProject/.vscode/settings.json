@@ -1,0 +1,8 @@
+{
+    "makefile.extensionOutputFolder": "./.vscode",
+    "files.associations": {
+        "cputime.h": "c",
+        "signal.h": "c",
+        "sched.h": "c"
+    }
+}
