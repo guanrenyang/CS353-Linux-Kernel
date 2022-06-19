@@ -25,7 +25,7 @@ __u64 total_cstime;
 
 //DEBUG
 unsigned long long num_pte_valid=0, num_pte_none = 0;
-int pid_is_tgid = 1;
+int pid_is_tgid = 0;
 /* fuse `thread_group_cputime_adjusted` and `thread_group_cputime` */
 static void my_thread_group_cputime_adjusted(struct task_struct *task, __u64 *utime, __u64 *stime){
     struct task_struct *t;
