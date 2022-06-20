@@ -190,7 +190,7 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
             pr_info("DEBUG: delta\nutime: %lld\nstime: %lld\ncutime: %lld\ncstime: %lld\nnum_accessed_page: %lld\n", 
                 utime-total_utime, stime-total_stime, cutime-total_cutime, cstime-total_cstime, num_accessed_page);
 
-            sprintf(output, "pid: %d\nutime: %lld\nstime: %lld\ncutime: %lld\ncstime: %lld\nnum_accessed_page: %lld\n", 
+            sprintf(output, "{\'pid\': %d, \'utime\': %lld, \'stime\': %lld, \'cutime\': %lld, \'cstime\': %lld, \'num_accessed_page\': %lld}", 
                 taskp->pid, utime, stime, cutime, cstime, num_accessed_page);
             out_len = strlen(output);
         } 

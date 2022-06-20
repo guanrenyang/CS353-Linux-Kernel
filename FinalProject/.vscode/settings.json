@@ -3,6 +3,8 @@
     "files.associations": {
         "cputime.h": "c",
         "signal.h": "c",
-        "sched.h": "c"
+        "sched.h": "c",
+        "types.h": "c",
+        "kernel.h": "c"
     }
 }
