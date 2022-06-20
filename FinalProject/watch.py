@@ -1,17 +1,14 @@
-from cgi import print_arguments
-import sys
 from PyQt5 import QtCore
 from PyQt5.QtCore import QProcess, QTimer, QObject
 from PyQt5.QtWidgets import QWidget, QApplication
-from click import echo
-from yaml import emit
+import sys
 
 def tick():
     # label.setText('Tick! The time is: %s' % datetime.now())
     print("here")
 class WatchProcessControl(QObject):
     # for comminucation with UI
-    resultReady = QtCore.pyqtSignal(float, float, float, float, float) # 4 time, 1 num page
+    resultReady = QtCore.pyqtSignal(dict) # 4 time, 1 num page
     
     # for inner use
     startReadProcessStat = QtCore.pyqtSignal()
@@ -37,7 +34,8 @@ class WatchProcessControl(QObject):
         print("DEBUG: ", self.testbenchProcess.processId())
         
         echoProcProcess = QProcess(self)
-        echoProcProcess.start('echo',[str(self.testbenchProcess.processId()), '>', '/proc/watch'])
+        echoProcProcess.setStandardOutputFile('/proc/watch')
+        echoProcProcess.start('echo',[str(self.testbenchProcess.processId())])
         echoProcProcess.waitForFinished()
         
         # emit signal
@@ -52,6 +50,7 @@ class WatchProcessControl(QObject):
         readStatProcess.waitForFinished()
         try:
             res = eval(str(readStatProcess.readAll()))
+            self.resultReady.emit(res)
             print(res)
         except:
             print("ERROR: Kernel Module Error")
@@ -74,12 +73,15 @@ class WatchProcessControl(QObject):
 
         
 if __name__ == '__main__':
-    # app = QApplication(sys.argv)
-    # watchProcessControl  = WatchProcessControl()
-    # watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
+    app = QApplication(sys.argv)
+    watchProcessControl  = WatchProcessControl()
+    watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
 
-    with open('/proc/watch', 'w') as the_file:
-        the_file.write('1')
+
+    # testProcess = QProcess(app)
+    # testProcess.setStandardOutputFile('/proc/watch')
+    # testProcess.start('echo', ['1'])
+    # testProcess.waitForFinished()
     # print(eval(str(readStatProcess.readAll(), 'utf-8')))
-    # app.exec_()
+    app.exec_()
     
