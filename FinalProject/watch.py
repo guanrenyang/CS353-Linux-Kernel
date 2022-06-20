@@ -1,11 +1,10 @@
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QProcess, QTimer, QObject
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtChart import QChartView
 import sys
 
-def tick():
-    # label.setText('Tick! The time is: %s' % datetime.now())
-    print("here")
+
 class WatchProcessControl(QObject):
     # for comminucation with UI
     resultReady = QtCore.pyqtSignal(dict) # 4 time, 1 num page
@@ -68,20 +67,70 @@ class WatchProcessControl(QObject):
         QTimer.killTimer(self.timer, self.timer.timerId())
         self.pid = None
 
+class WatchUI(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(WatchUI, self).__init__(parent)        
+        self.resize(800, 500)
+        self.setWindowTitle('CPUWatch')
         
-        
+        # layer 0
+        self.vlayout0 = QtWidgets.QVBoxLayout(self)
+        # layer 1
+        self.hlayout1_0 = QtWidgets.QHBoxLayout()
+        self.hlayout1_1 = QtWidgets.QHBoxLayout()
+        self.vlayout0.addLayout(self.hlayout1_0)
+        self.vlayout0.addLayout(self.hlayout1_1)
 
+        # layer 2
+        self.vlayout2_0 = QtWidgets.QVBoxLayout()
+        self.runButton = QtWidgets.QPushButton(self)
+        self.hlayout1_0.addLayout(self.vlayout2_0)
+        self.hlayout1_0.addWidget(self.runButton)
+
+        self.flayout2_1 = QtWidgets.QFormLayout()
+        self.vlayout2_2 = QtWidgets.QVBoxLayout()
+        self.hlayout1_1.addLayout(self.flayout2_1)
+        self.hlayout1_1.addLayout(self.vlayout2_2)
+        # layer 3
+        self.inputCommandLabel = QtWidgets.QLabel(self)
+        self.inputCommandLineEdit = QtWidgets.QLineEdit(self)
+        self.vlayout2_0.addWidget(self.inputCommandLabel)
+        self.vlayout2_0.addWidget(self.inputCommandLineEdit)
         
+        self.utimeLabel = QtWidgets.QLabel("Usert time:", self)
+        self.utimeLineEdit = QtWidgets.QLineEdit(self)
+        self.stimeLabel = QtWidgets.QLabel("Kernel time:", self)
+        self.stimeLineEdit = QtWidgets.QLineEdit(self)
+        self.cpuLabel = QtWidgets.QLabel("CPU Usage(%):", self)
+        self.cpuLineEdit = QtWidgets.QLineEdit(self)
+        self.memoryLabel = QtWidgets.QLabel("Memory usage", self)
+        self.memoryLineEdit = QtWidgets.QLineEdit(self)
+        self.typeLabel = QtWidgets.QLabel("Type:", self)
+        self.typeLineEdit = QtWidgets.QLineEdit(self)
+        self.flayout2_1.addRow(self.utimeLabel, self.utimeLineEdit)
+        self.flayout2_1.addRow(self.stimeLabel, self.stimeLineEdit)
+        self.flayout2_1.addRow(self.cpuLabel, self.cpuLineEdit)
+        self.flayout2_1.addRow(self.memoryLabel, self.memoryLineEdit)
+        self.flayout2_1.addRow(self.typeLabel, self.typeLineEdit)
+
+        self.charView = QChartView(self)
+        self.showButton = QtWidgets.QPushButton(self)
+        self.vlayout2_2.addWidget(self.charView)
+        self.vlayout2_2.addWidget(self.showButton)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    watchProcessControl  = WatchProcessControl()
-    watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
-
+    mainWindow = WatchUI()
+    mainWindow.show()
+    
+    # watchProcessControl  = WatchProcessControl()
+    # watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
 
     # testProcess = QProcess(app)
     # testProcess.setStandardOutputFile('/proc/watch')
     # testProcess.start('echo', ['1'])
     # testProcess.waitForFinished()
     # print(eval(str(readStatProcess.readAll(), 'utf-8')))
-    app.exec_()
+    sys.exit(app.exec_())
     
