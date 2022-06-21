@@ -1,4 +1,5 @@
 from ast import arg, arguments
+from asyncore import read
 from sqlite3 import connect
 from time import sleep
 from PyQt5 import QtCore, QtWidgets
@@ -176,13 +177,22 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     # mainWindow = WatchUI()
     # mainWindow.show()
-    watchProcessControl  = WatchProcessControl(1000)
-    watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
+    # watchProcessControl  = WatchProcessControl(1000)
+    # watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
 
-    # testProcess = QProcess(app)
-    # testProcess.setStandardOutputFile('/proc/watch')
-    # testProcess.start('echo', ['1'])
-    # testProcess.waitForFinished()
+    testbenchProcess = QProcess()
+    testbenchProcess.start('sysbench', ['memory', 'run'])
+    testbenchProcess.waitForStarted()
+
+    echoProcess = QProcess()
+    echoProcess.setStandardOutputFile('/proc/watch')
+    echoProcess.start('echo', [str(testbenchProcess.processId())])
+    echoProcess.waitForFinished()
+
+    readProcess = QProcess()
+    readProcess.start('cat', ['/proc/watch'])
+    readProcess.waitForFinished()
+    print(readProcess.readAll())
     
     sys.exit(app.exec_())
     

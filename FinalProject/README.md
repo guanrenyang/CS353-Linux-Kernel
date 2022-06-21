@@ -19,3 +19,7 @@ If pmd is NULL, pte is also NULL.
 When ptep is none, ptep_test_and_clear_young(ptep)=0.
 
 模块无法访问kernel路径下的文件
+
+python无法使用open读取proc文件，试过改proc read函数，但是总是killed。
+
+多写一些qt的thread和process，注重同步机制

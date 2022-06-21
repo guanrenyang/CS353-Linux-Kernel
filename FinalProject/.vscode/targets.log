@@ -6,11 +6,12 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jun 21 01:09:17 2022
+# Make data base, printed on Tue Jun 21 02:30:19 2022
 
 # Variables
 
 # 'override' directive
+ 
 GNUMAKEFLAGS := 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
@@ -49,7 +50,7 @@ VTE_VERSION = 6003
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:53915
+JOURNAL_STREAM = 8:49985
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -71,7 +72,7 @@ DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 1481
+MANAGERPID = 1493
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -85,7 +86,7 @@ PATH = /home/renyang/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1698,unix/ubuntu:/tmp/.ICE-unix/1698
+SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1703,unix/ubuntu:/tmp/.ICE-unix/1703
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -103,7 +104,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = b454ce11174b43b49e16ca08d8dfc796
+INVOCATION_ID = 8c075b80f3af4356a474d86dd4cfe9d5
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/99/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -127,7 +128,7 @@ PWD = /home/renyang/CS353-Linux-Kernel/FinalProject
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1661
+SSH_AGENT_PID = 1668
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -165,6 +166,7 @@ obj-m = watch.o
 # environment
 MAKELEVEL := 0
 # environment
+ 
 SNAP_REAL_HOME = /home/renyang
 # environment
 COLORTERM = truecolor
@@ -181,7 +183,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-00da4def-f0da-481a-8ab8-e1753dfee930.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-966f1399-6012-4f98-a8b3-703361527fda.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -231,7 +233,7 @@ LC_ALL = C
 # environment
 GJS_DEBUG_TOPICS = JS ERROR;JS LOG
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/9e49da61_927c_49af_bddc_8af19f5fe583
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/acfa1e50_0d27_4546_abbb_d088747bff53
 # automatic
 ^F = $(notdir $^)
 # environment
@@ -247,6 +249,7 @@ WINDOWPATH = 2
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
 # environment
+ 
 GJS_DEBUG_OUTPUT = stderr
 # default
 .RECIPEPREFIX := 
@@ -255,7 +258,7 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 2501
+VSCODE_PID = 5299
 # variable set hash-table stats:
 # Load=123/1024=12%, Rehash=0, Collisions=15/156=10%
 
@@ -265,9 +268,9 @@ VSCODE_PID = 2501
 
 # Directories
 
-# . (device 2053, inode 3540293): 25 files, no impossibilities.
+# . (device 2053, inode 3540293): 12 files, no impossibilities.
 
-# 25 files, no impossibilities in 1 directories.
+# 12 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -277,11 +280,11 @@ VSCODE_PID = 2501
 
 # 'override' directive
 all: .SHELLSTATUS := 0
- 
 all:
 #  Command line target.
 #  Implicit rule search has not been done.
 #  Implicit/static pattern stem: ''
+ 
 #  File does not exist.
 #  File has been updated.
 #  Needs to be updated (-q is set).
@@ -315,7 +318,7 @@ all:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-06-17 03:36:47.331537159
+#  Last modified 2022-06-21 02:04:08.184178876
 #  File has been updated.
 #  Successfully updated.
 
@@ -329,6 +332,7 @@ clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
+ 
 #  recipe to execute (from 'Makefile', line 5):
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
@@ -340,12 +344,12 @@ clean:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 31 / storage = 353 B / avg = 11 B
-# current buf: size = 8162 B / used = 353 B / count = 31 / avg = 11 B
+# strcache buffers: 1 (0) / strings = 18 / storage = 175 B / avg = 9 B
+# current buf: size = 8162 B / used = 175 B / count = 18 / avg = 9 B
 
-# strcache performance: lookups = 39 / hit rate = 20%
+# strcache performance: lookups = 26 / hit rate = 30%
 # hash-table stats:
-# Load=31/8192=0%, Rehash=0, Collisions=2/39=5%
-# Finished Make data base on Tue Jun 21 01:09:17 2022
+# Load=18/8192=0%, Rehash=0, Collisions=1/26=4%
+# Finished Make data base on Tue Jun 21 02:30:19 2022
 
  
