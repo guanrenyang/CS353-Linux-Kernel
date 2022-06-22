@@ -1,12 +1,15 @@
 from time import sleep
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtCore import QProcess, QTimer, QObject, QThread
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtCore import QProcess, QTimer, QObject, QThread, Qt
+from PyQt5.QtWidgets import QMainWindow, QApplication, QSizePolicy, QDockWidget
 from PyQt5.QtChart import QChartView
+from PyQt5.QtGui import QPixmap
 import sys
-
-
-
+import pyqtgraph
+import csv
+import os
+NANO2MICRO = 1000000
+MICRO2NROMAL = 1000
 class CPUWatchWorker(QObject):
     # for comminucation with other classes
     signal_resultReady = QtCore.pyqtSignal(str) # 4 time, 1 num page
@@ -110,17 +113,24 @@ class WatchUI(QtWidgets.QWidget):
 
         # statistics
         self.pid: int = None
-        self.utimeList: list = []
-        self.stimeList: list = []
+        self.utimeList: list = [] # ms
+        self.stimeList: list = [] # ms
+        # self.totalTimeList: list = []
         self.cpuUsageList: list = []
         self.memoryUsageList: list = []
+        self.watchTimeList: list = [] # ms
+        self.mem2compList: list = []
         self.type: str = None
+        self.watchInterval = None
+
+        self.csvFileName = 'result.csv'
         # UI  
         self.resize(800, 500)
         self.setWindowTitle('CPUWatch')
         
         # layer 0
         self.vlayout0 = QtWidgets.QVBoxLayout(self)
+        
         # layer 1
         self.hlayout1_0 = QtWidgets.QHBoxLayout()
         self.hlayout1_1 = QtWidgets.QHBoxLayout()
@@ -130,6 +140,7 @@ class WatchUI(QtWidgets.QWidget):
         # layer 2
         self.vlayout2_0 = QtWidgets.QVBoxLayout()
         self.runButton = QtWidgets.QPushButton('RUN',self)
+        self.runButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
         self.hlayout1_0.addLayout(self.vlayout2_0)
         self.hlayout1_0.addWidget(self.runButton)
 
@@ -141,10 +152,10 @@ class WatchUI(QtWidgets.QWidget):
         # layer 3
         self.inputCommandLabel = QtWidgets.QLabel('Testbench Command (Shell):', self)
         self.inputCommandLineEdit = QtWidgets.QLineEdit(self)
-        self.inputCommandLineEdit.setText('sysbench memory run')
-        self.testIntervalLabel = QtWidgets.QLabel('Test interval (s):', self)
+        self.inputCommandLineEdit.setText('sysbench memory --memory-block-size=4G --memory-access-mode=rnd run')
+        self.testIntervalLabel = QtWidgets.QLabel('Test interval (ms):', self)
         self.testIntervalLineEdit = QtWidgets.QLineEdit(self)
-        self.testIntervalLineEdit.setText('1000')
+        self.testIntervalLineEdit.setText('500')
         self.vlayout2_0.addWidget(self.inputCommandLabel)
         self.vlayout2_0.addWidget(self.inputCommandLineEdit)
         self.vlayout2_0.addWidget(self.testIntervalLabel)
@@ -152,58 +163,153 @@ class WatchUI(QtWidgets.QWidget):
         
         self.pidLabel = QtWidgets.QLabel("Pid:", self)
         self.pidLineEdit  =QtWidgets.QLineEdit(self)
-        self.pidLineEdit.setEnabled(False)
-        self.utimeLabel = QtWidgets.QLabel("Usert time:", self)
+        self.pidLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.watchTimeLabel = QtWidgets.QLabel("Watch time:", self)
+        self.watchTimeLineEdit = QtWidgets.QLineEdit(self)
+        self.watchTimeLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.utimeLabel = QtWidgets.QLabel("User mode time (ms):", self)
         self.utimeLineEdit = QtWidgets.QLineEdit(self)
-        self.utimeLineEdit.setEnabled(False)
-        self.stimeLabel = QtWidgets.QLabel("Kernel time:", self)
+        self.utimeLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.stimeLabel = QtWidgets.QLabel("Kernel mode time (ms):", self)
         self.stimeLineEdit = QtWidgets.QLineEdit(self)
-        self.stimeLineEdit.setEnabled(False)
-        self.cpuLabel = QtWidgets.QLabel("CPU Usage(%):", self)
+        self.stimeLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.cpuLabel = QtWidgets.QLabel("CPU Usage(% * Num_threads):", self)
         self.cpuLineEdit = QtWidgets.QLineEdit(self)
-        self.cpuLineEdit.setEnabled(False)
-        self.memoryLabel = QtWidgets.QLabel("Memory usage", self)
+        self.cpuLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.memoryLabel = QtWidgets.QLabel("Memory usage (Num of pages)", self)
         self.memoryLineEdit = QtWidgets.QLineEdit(self)
-        self.memoryLineEdit.setEnabled(False)
+        self.memoryLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.mem2compLabel = QtWidgets.QLabel("Pages/Second(User Mode):", self)
+        self.mem2compLineEdit = QtWidgets.QLineEdit(self)
+        self.mem2compLineEdit.setFocusPolicy(Qt.NoFocus)
         self.typeLabel = QtWidgets.QLabel("Type:", self)
         self.typeLineEdit = QtWidgets.QLineEdit(self)
-        self.typeLineEdit.setEnabled(False)
+        self.typeLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.exportCSVButton = QtWidgets.QPushButton("Export to csv", self)
+        self.logoLabel = QtWidgets.QLabel(self)
+        self.logoLabel.setPixmap(QPixmap('./LOGO.png').scaled(350,300, Qt.KeepAspectRatio, Qt.SmoothTransformation))# 图片路径
+
         self.flayout2_1.addRow(self.pidLabel, self.pidLineEdit)
+        self.flayout2_1.addRow(self.watchTimeLabel, self.watchTimeLineEdit)
         self.flayout2_1.addRow(self.utimeLabel, self.utimeLineEdit)
         self.flayout2_1.addRow(self.stimeLabel, self.stimeLineEdit)
         self.flayout2_1.addRow(self.cpuLabel, self.cpuLineEdit)
         self.flayout2_1.addRow(self.memoryLabel, self.memoryLineEdit)
+        self.flayout2_1.addRow(self.mem2compLabel, self.mem2compLineEdit)
         self.flayout2_1.addRow(self.typeLabel, self.typeLineEdit)
+        self.flayout2_1.addRow(self.exportCSVButton)
+        self.flayout2_1.addRow(self.logoLabel)
+        self.flayout2_1.addRow
+        self.lineChart = pyqtgraph.PlotWidget(self)
+        self.lineChart.setBackground('w')
+        self.plotChartLabel = QtWidgets.QLabel("Choose an attribute to plot:")
+        self.hlayout3_0 = QtWidgets.QHBoxLayout()
+        self.vlayout2_2.addWidget(self.lineChart)
+        self.vlayout2_2.addWidget(self.plotChartLabel)
+        self.vlayout2_2.addLayout(self.hlayout3_0)
 
-        self.charView = QChartView(self)
-        self.showButton = QtWidgets.QPushButton('SHOW', self)
-        self.vlayout2_2.addWidget(self.charView)
-        self.vlayout2_2.addWidget(self.showButton)
-
+        # layer 4
+        self.plotRunTimeButton = QtWidgets.QPushButton("User Mode Time", self)
+        self.plotCPUUsageButton = QtWidgets.QPushButton("CPU Usage Ratio", self)
+        self.plotMemoryUsageButton = QtWidgets.QPushButton("Memory Usage", self)
+        self.plotmem2compButton = QtWidgets.QPushButton("Pages/S", self)
+        self.hlayout3_0.addWidget(self.plotRunTimeButton)
+        self.hlayout3_0.addWidget(self.plotCPUUsageButton)
+        self.hlayout3_0.addWidget(self.plotMemoryUsageButton)
+        self.hlayout3_0.addWidget(self.plotmem2compButton)
+        
+        self.plotRunTimeButton.clicked.connect(lambda: self.plot_line_chart(self.watchTimeList, self.utimeList, 'User Mode Time', 'Execution Time in User Mode (ms)'))
+        self.plotCPUUsageButton.clicked.connect(lambda: self.plot_line_chart(self.watchTimeList, self.cpuUsageList, 'CPU Usage Ratio', 'CPU Usage Ratio (%)'))
+        self.plotMemoryUsageButton.clicked.connect(lambda: self.plot_line_chart(self.watchTimeList, self.memoryUsageList, 'Memory Usage', 'Number of accessed pages'))
+        self.plotmem2compButton.clicked.connect(lambda:self.plot_line_chart(self.watchTimeList, self.mem2compList, 'Number of accessed pages per second in user mode', 'Number of accessed pages per second in user mode (/s'))
+        
         self.runButton.clicked.connect(self.start_testbench)
+
+        self.exportCSVButton.clicked.connect(self.to_csv)
     # slot
     def start_testbench(self):
+
+        # clear statistics
+        self.pid: int = None
+        self.utimeList: list = [] # ms
+        self.stimeList: list = [] # ms
+        self.cpuUsageList: list = []
+        self.memoryUsageList: list = []
+        self.watchTimeList: list = [] # ms
+        self.mem2compList: list = []
+        self.type: str = None
+        self.watchInterval = None
+        
         # parse command
         command, arguments, watchInterval = self.tool_parse_command()
 
         # start a new thread to run testbench and watching
         # watchProcessControl = CPUWatchWorker(watchInterval, self)
         # watchProcessControl.moveToThread(self.testbenchThread)
+        self.watchInterval = watchInterval
         self.watchController = CPUWatchController(self)
-        self.watchController.start(command, arguments, watchInterval)
-
+        self.watchController.start(command, arguments, watchInterval)        
         self.watchController.signal_resultReady.connect(self.update_stat)
 
     def update_stat(self, info: str):
-        info_dict = eval(info)
-        print(info_dict)
-        self.pid = info_dict['pid']
-        self.utimeList.append(info_dict['utime']+info_dict['cutime'])
-        self.stimeList.append(info_dict['stime']+info_dict['cstime'])
-        self.memoryUsageList.append(info_dict['num_accessed_page'])
-        # cpuUsage = 
+        try: 
+            info_dict = eval(info)
+            print(info_dict)
+            self.pid = info_dict['pid']
 
+            utime = (info_dict['utime']+info_dict['cutime'])/NANO2MICRO
+            stime = (info_dict['stime']+info_dict['cstime'])/NANO2MICRO
+            cpuUsage = self.tool_demical_to_fraction(utime/self.watchInterval) # %
+            memoryUsage = info_dict['num_accessed_page']
+            watchTime = sum(self.watchTimeList)+self.watchInterval
+            numPagePerS = round(memoryUsage/(utime/MICRO2NROMAL), 2)
 
+            self.utimeList.append(utime)
+            self.stimeList.append(stime)
+            self.watchTimeList.append(watchTime)
+            self.cpuUsageList.append(cpuUsage)
+            self.memoryUsageList.append(memoryUsage)
+            self.mem2compList.append(numPagePerS)
+
+            '''update UI'''
+            self.update_stat_UI(self.pid, watchTime, utime, stime, cpuUsage, memoryUsage, numPagePerS)
+        except:
+            pass
+
+    def update_stat_UI(self, pid, watchTime, utime, stime, cpuUsage, memoryUsage, mem2comp=None, type=None):
+        if pid is not None:
+            self.pidLineEdit.setText(str(pid))
+        if watchTime is not None:
+            self.watchTimeLineEdit.setText(str(watchTime))
+        if utime is not None:
+            self.utimeLineEdit.setText(str(utime))
+        if stime is not None:
+            self.stimeLineEdit.setText(str(stime))
+        if cpuUsage is not None:
+            self.cpuLineEdit.setText(str(cpuUsage))
+        if memoryUsage is not None:
+            self.memoryLineEdit.setText(str(memoryUsage))
+        if mem2comp is not None:
+            self.mem2compLineEdit.setText(str(mem2comp))
+        if type is not None:
+            self.typeLineEdit.setText(str(type))
+
+    def plot_line_chart(self, xData:list, yData:list, title:str, yLabel:str):
+        self.lineChart.clear()
+        self.lineChart.addLegend()
+        # drop the first data
+        if len(xData)>1:
+            xData = xData[1:] 
+        if len(yData)>1:
+            yData = yData[1:]
+        xData = list(range(1, len(yData)+1))
+        print(yData)
+        labelStyles = {'color':'black', 'font-size':'15px'}
+        self.lineChart.setTitle(title, **{'color':'black', 'font-size':'20px'})
+        self.lineChart.setLabel('left', yLabel, **labelStyles)
+        self.lineChart.setLabel('bottom', 'Watch Time (ms)', **labelStyles)
+    
+        self.lineChart.plot(xData, yData, pen=(1,1))
         
 
     def tool_parse_command(self):
@@ -215,7 +321,21 @@ class WatchUI(QtWidgets.QWidget):
             return command, arguments, watchInterval
         except:
             print("ERROR: command error!")
+    def to_csv(self):
+        with open(self.csvFileName, 'w') as file:
+            writer = csv.writer(file)
+            writer.writerow(['executionTime']+self.watchTimeList)
+            writer.writerow(['userModeTime']+self.stimeList)
+            writer.writerow(['cpuUsage']+self.cpuUsageList)
+            writer.writerow(['memoryUsage']+self.memoryUsageList)
+            writer.writerow(['PagesPerSecond']+self.mem2compList)
 
+    def tool_demical_to_fraction(self, origin:float):
+        return round(origin*100, 2)
+
+    def __del__(self):
+        if self.watchController is not None:
+            self.watchController.deleteLater()
 ''''''
 class Worker(QObject):
     resultReady = QtCore.pyqtSignal(str)
@@ -270,11 +390,5 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainWindow = WatchUI()
     mainWindow.show()
-    # watchProcessControl  = WatchProcessControl(1000)
-    # watchProcessControl.start_testbench('sysbench', ['memory', 'run'])
-    # controller = Controller(app)
-    # controller.emit()
-    
-    
     sys.exit(app.exec_())
     

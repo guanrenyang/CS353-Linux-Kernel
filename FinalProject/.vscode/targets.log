@@ -6,12 +6,11 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Tue Jun 21 02:30:19 2022
+# Make data base, printed on Wed Jun 22 03:31:28 2022
 
 # Variables
 
 # 'override' directive
- 
 GNUMAKEFLAGS := 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
@@ -50,7 +49,7 @@ VTE_VERSION = 6003
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:49985
+JOURNAL_STREAM = 8:46028
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -68,11 +67,11 @@ USERNAME = renyang
 # environment
 XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=0a2d1ee30d4ad2e2cd89784e62b2b04a
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 1493
+MANAGERPID = 1539
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -86,7 +85,7 @@ PATH = /home/renyang/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1703,unix/ubuntu:/tmp/.ICE-unix/1703
+SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1749,unix/ubuntu:/tmp/.ICE-unix/1749
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -104,7 +103,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 8c075b80f3af4356a474d86dd4cfe9d5
+INVOCATION_ID = 134f1aa51edc4d4e982ceecb8b1699ee
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/99/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -128,7 +127,7 @@ PWD = /home/renyang/CS353-Linux-Kernel/FinalProject
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1668
+SSH_AGENT_PID = 1714
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -166,7 +165,6 @@ obj-m = watch.o
 # environment
 MAKELEVEL := 0
 # environment
- 
 SNAP_REAL_HOME = /home/renyang
 # environment
 COLORTERM = truecolor
@@ -183,7 +181,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-966f1399-6012-4f98-a8b3-703361527fda.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-ab9fbeaf-6e72-4f9a-96d5-f00c2995e694.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -198,8 +196,6 @@ XDG_CURRENT_DESKTOP = Unity
 %D = $(patsubst %/,%,$(dir $%))
 # default
 MAKE_COMMAND := make
-# environment
-OLDPWD = /home/renyang/Desktop
 # default
 .VARIABLES := 
 # automatic
@@ -231,13 +227,13 @@ SNAP_NAME = code
 # environment
 LC_ALL = C
 # environment
-GJS_DEBUG_TOPICS = JS ERROR;JS LOG
+DBUS_STARTER_BUS_TYPE = session
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/acfa1e50_0d27_4546_abbb_d088747bff53
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/a2f16da2_d022_45a8_9abd_a4968c46017b
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.109
+GNOME_TERMINAL_SERVICE = :1.1670
 # default
 SUFFIXES := 
 # environment
@@ -248,9 +244,6 @@ CHROME_DESKTOP = code-url-handler.desktop
 WINDOWPATH = 2
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
-# environment
- 
-GJS_DEBUG_OUTPUT = stderr
 # default
 .RECIPEPREFIX := 
 # environment
@@ -258,9 +251,11 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 5299
+VSCODE_PID = 38278
+# environment
+DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=0a2d1ee30d4ad2e2cd89784e62b2b04a
 # variable set hash-table stats:
-# Load=123/1024=12%, Rehash=0, Collisions=15/156=10%
+# Load=122/1024=12%, Rehash=0, Collisions=15/155=10%
 
 # Pattern-specific Variable Values
 
@@ -268,9 +263,9 @@ VSCODE_PID = 5299
 
 # Directories
 
-# . (device 2053, inode 3540293): 12 files, no impossibilities.
+# . (device 2053, inode 3540293): 11 files, no impossibilities.
 
-# 12 files, no impossibilities in 1 directories.
+# 11 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -284,7 +279,6 @@ all:
 #  Command line target.
 #  Implicit rule search has not been done.
 #  Implicit/static pattern stem: ''
- 
 #  File does not exist.
 #  File has been updated.
 #  Needs to be updated (-q is set).
@@ -320,6 +314,7 @@ Makefile:
 #  Implicit rule search has been done.
 #  Last modified 2022-06-21 02:04:08.184178876
 #  File has been updated.
+ 
 #  Successfully updated.
 
 # Not a target:
@@ -332,7 +327,6 @@ clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
- 
 #  recipe to execute (from 'Makefile', line 5):
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
@@ -344,12 +338,12 @@ clean:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 18 / storage = 175 B / avg = 9 B
-# current buf: size = 8162 B / used = 175 B / count = 18 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 17 / storage = 162 B / avg = 9 B
+# current buf: size = 8162 B / used = 162 B / count = 17 / avg = 9 B
 
-# strcache performance: lookups = 26 / hit rate = 30%
+# strcache performance: lookups = 25 / hit rate = 32%
 # hash-table stats:
-# Load=18/8192=0%, Rehash=0, Collisions=1/26=4%
-# Finished Make data base on Tue Jun 21 02:30:19 2022
+# Load=17/8192=0%, Rehash=0, Collisions=1/25=4%
+# Finished Make data base on Wed Jun 22 03:31:28 2022
 
  

@@ -36,3 +36,6 @@ python无法使用open读取proc文件，试过改proc read函数，但是总是
 2. 无法判断内存读写是否连续
 3. 集中读取同一页、与分散读取多个页，无法区分
 一个页中不同byte的区别就是offset不同，其他的都一样，所以无法通过标志位搞定
+
+time unit: nanoseconds
+![image-20220622141418806](https://michael-picgo.obs.cn-east-3.myhuaweicloud.com/image-20220622141418806.png)
