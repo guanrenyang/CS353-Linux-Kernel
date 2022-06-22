@@ -1,7 +1,3 @@
-
-from re import S
-from select import select
-from signal import signal
 from time import sleep
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QProcess, QTimer, QObject, QThread
@@ -9,8 +5,6 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtChart import QChartView
 import sys
 
-from click import command
-from yaml import emit
 
 
 class CPUWatchWorker(QObject):
@@ -58,7 +52,7 @@ class CPUWatchWorker(QObject):
         readStatProcess.start('cat', ['/proc/watch'])
         readStatProcess.waitForFinished()
         try:
-            res = str(readStatProcess.readAll())
+            res = str(readStatProcess.readAll(), encoding='utf-8')
             self.signal_resultReady.emit(res)
         except:
             print("ERROR: Kernel Module Error")
@@ -114,6 +108,13 @@ class WatchUI(QtWidgets.QWidget):
 
         self.watchController = None
 
+        # statistics
+        self.pid: int = None
+        self.utimeList: list = []
+        self.stimeList: list = []
+        self.cpuUsageList: list = []
+        self.memoryUsageList: list = []
+        self.type: str = None
         # UI  
         self.resize(800, 500)
         self.setWindowTitle('CPUWatch')
@@ -140,8 +141,10 @@ class WatchUI(QtWidgets.QWidget):
         # layer 3
         self.inputCommandLabel = QtWidgets.QLabel('Testbench Command (Shell):', self)
         self.inputCommandLineEdit = QtWidgets.QLineEdit(self)
+        self.inputCommandLineEdit.setText('sysbench memory run')
         self.testIntervalLabel = QtWidgets.QLabel('Test interval (s):', self)
         self.testIntervalLineEdit = QtWidgets.QLineEdit(self)
+        self.testIntervalLineEdit.setText('1000')
         self.vlayout2_0.addWidget(self.inputCommandLabel)
         self.vlayout2_0.addWidget(self.inputCommandLineEdit)
         self.vlayout2_0.addWidget(self.testIntervalLabel)
@@ -149,16 +152,22 @@ class WatchUI(QtWidgets.QWidget):
         
         self.pidLabel = QtWidgets.QLabel("Pid:", self)
         self.pidLineEdit  =QtWidgets.QLineEdit(self)
+        self.pidLineEdit.setEnabled(False)
         self.utimeLabel = QtWidgets.QLabel("Usert time:", self)
         self.utimeLineEdit = QtWidgets.QLineEdit(self)
+        self.utimeLineEdit.setEnabled(False)
         self.stimeLabel = QtWidgets.QLabel("Kernel time:", self)
         self.stimeLineEdit = QtWidgets.QLineEdit(self)
+        self.stimeLineEdit.setEnabled(False)
         self.cpuLabel = QtWidgets.QLabel("CPU Usage(%):", self)
         self.cpuLineEdit = QtWidgets.QLineEdit(self)
+        self.cpuLineEdit.setEnabled(False)
         self.memoryLabel = QtWidgets.QLabel("Memory usage", self)
         self.memoryLineEdit = QtWidgets.QLineEdit(self)
+        self.memoryLineEdit.setEnabled(False)
         self.typeLabel = QtWidgets.QLabel("Type:", self)
         self.typeLineEdit = QtWidgets.QLineEdit(self)
+        self.typeLineEdit.setEnabled(False)
         self.flayout2_1.addRow(self.pidLabel, self.pidLineEdit)
         self.flayout2_1.addRow(self.utimeLabel, self.utimeLineEdit)
         self.flayout2_1.addRow(self.stimeLabel, self.stimeLineEdit)
@@ -186,7 +195,16 @@ class WatchUI(QtWidgets.QWidget):
         self.watchController.signal_resultReady.connect(self.update_stat)
 
     def update_stat(self, info: str):
-        print(info)
+        info_dict = eval(info)
+        print(info_dict)
+        self.pid = info_dict['pid']
+        self.utimeList.append(info_dict['utime']+info_dict['cutime'])
+        self.stimeList.append(info_dict['stime']+info_dict['cstime'])
+        self.memoryUsageList.append(info_dict['num_accessed_page'])
+        # cpuUsage = 
+
+
+        
 
     def tool_parse_command(self):
         content = self.inputCommandLineEdit.text()
@@ -212,7 +230,7 @@ class Worker(QObject):
 
         echoProcess = QProcess()
         echoProcess.setStandardOutputFile('/proc/watch')
-        echoProcess.start('echo', [str(testbenchProcess.processId())])
+        echoProcess.start('echo', [str(testbenchProcess.processId(), encoding='utf-8')])
         echoProcess.waitForFinished()
 
         for s in range(10):

@@ -18,10 +18,10 @@ static char output[MAX_SIZE];
 static int out_len;
 static struct task_struct* taskp = NULL; // the task_struct with the inputed pid
 
-__u64 total_utime;
-__u64 total_stime;
-__u64 total_cutime;
-__u64 total_cstime;
+__u64 last_utime;
+__u64 last_stime;
+__u64 last_cutime;
+__u64 last_cstime;
 
 //DEBUG
 unsigned long long num_pte_valid=0, num_pte_none = 0;
@@ -187,11 +187,15 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
             pr_info("LOG: get_accessed_page_num");
             num_accessed_page = get_accessed_page_num(taskp);
 
-            pr_info("DEBUG: delta\nutime: %lld\nstime: %lld\ncutime: %lld\ncstime: %lld\nnum_accessed_page: %lld\n", 
-                utime-total_utime, stime-total_stime, cutime-total_cutime, cstime-total_cstime, num_accessed_page);
 
             sprintf(output, "{\'pid\': %d, \'utime\': %lld, \'stime\': %lld, \'cutime\': %lld, \'cstime\': %lld, \'num_accessed_page\': %lld}", 
-                taskp->pid, utime, stime, cutime, cstime, num_accessed_page);
+                taskp->pid, utime-last_utime, stime-last_stime, cutime-last_cutime, cstime-last_cstime, num_accessed_page);     
+            // update last_timeStatistics
+            last_utime = utime;
+            last_stime = stime;
+            last_cutime = cutime;
+            last_cstime = cstime;
+            
             out_len = strlen(output);
         } 
         else 
@@ -222,7 +226,7 @@ static ssize_t proc_write(struct file *fp, const char __user *ubuf, size_t len, 
     
     taskp = get_pid_task(find_get_pid(pid), PIDTYPE_PID);
 
-    get_time(taskp, &total_utime, &total_stime, &total_cutime, &total_cstime);// record the starting time
+    get_time(taskp, &last_utime, &last_stime, &last_cutime, &last_cstime);// record the starting time
     get_accessed_page_num(taskp);// clear `young` of all pages 
 
     pr_info("DEBUG: num_pte_valid: %lld, num_pte_none: %lld", num_pte_valid, num_pte_none);
