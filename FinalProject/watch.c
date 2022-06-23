@@ -178,13 +178,13 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
         
         if (taskp!=NULL)
         {   
-            pr_info("LOG: valid task pointer");
-            pr_info("LOG: get_time");
+            // pr_info("LOG: valid task pointer");
+            // pr_info("LOG: get_time");
             get_time(taskp, &utime, &stime, &cutime, &cstime);
 
-            pr_info("DEBUG: pid=tgid: %d", pid_is_tgid);
+            // pr_info("DEBUG: pid=tgid: %d", pid_is_tgid);
 
-            pr_info("LOG: get_accessed_page_num");
+            // pr_info("LOG: get_accessed_page_num");
             num_accessed_page = get_accessed_page_num(taskp);
 
 
@@ -209,7 +209,7 @@ static ssize_t proc_read(struct file *fp, char __user *ubuf, size_t len, loff_t 
         count = out_len - *pos;
     }
 
-    pr_info("LOG: Reading the proc file\n");
+    // pr_info("LOG: Reading the proc file\n");
     if (copy_to_user(ubuf, output + *pos, count)) return -EFAULT;
     *pos += count;
     
@@ -229,7 +229,7 @@ static ssize_t proc_write(struct file *fp, const char __user *ubuf, size_t len, 
     get_time(taskp, &last_utime, &last_stime, &last_cutime, &last_cstime);// record the starting time
     get_accessed_page_num(taskp);// clear `young` of all pages 
 
-    pr_info("DEBUG: num_pte_valid: %lld, num_pte_none: %lld", num_pte_valid, num_pte_none);
+    // pr_info("DEBUG: num_pte_valid: %lld, num_pte_none: %lld", num_pte_valid, num_pte_none);
     *pos += len;
     return len;
 }

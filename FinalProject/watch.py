@@ -1,3 +1,4 @@
+from logging import exception
 from time import sleep
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QProcess, QTimer, QObject, QThread, Qt
@@ -7,12 +8,15 @@ from PyQt5.QtGui import QPixmap
 import sys
 import pyqtgraph
 import csv
-import os
-NANO2MICRO = 1000000
-MICRO2NROMAL = 1000
+import time
+
+NANO2MILLI = 1000000
+MILLI2SECOND = 1000
+MILLI2JEFFIES = 10
 class CPUWatchWorker(QObject):
     # for comminucation with other classes
-    signal_resultReady = QtCore.pyqtSignal(str) # 4 time, 1 num page
+    signal_resultReady = QtCore.pyqtSignal(dict) # 4 time, 1 num page
+    signal_cputimeReady = QtCore.pyqtSignal(float, float, float)
     signal_stopWatch = QtCore.pyqtSignal()
     # for inner use
     signal_startReadStat = QtCore.pyqtSignal()
@@ -24,9 +28,15 @@ class CPUWatchWorker(QObject):
         self.watchInterval = None # in ms
         self.timer = None
         self.testbenchProcess = None
+
+        # last utime and stime from /proc/watch are recorded in kernel module
         
-        # # connect 
-        # self.signal_startReadStat.connect(self.start_watch)
+        self.lastUserCputime: float = -1 # ms
+        self.lastKernelCputime: float = -1
+        self.lastTotalCputime: float = -1
+
+        self.lastUtimeStat: float = -1
+        self.lastStimeStat: float = -1        
         
     def start_testbench(self, command: str, arguments: list, watchInterval: int):
         self.watchInterval = watchInterval
@@ -38,34 +48,103 @@ class CPUWatchWorker(QObject):
         # self.pid = self.testbenchProcess.processId()
         print("DEBUG: ", self.testbenchProcess.processId())
         
+        # write in /proc/watch
         echoProcProcess = QProcess()
         echoProcProcess.setStandardOutputFile('/proc/watch')
         echoProcProcess.start('echo',[str(self.testbenchProcess.processId())])
         echoProcProcess.waitForFinished()
-        
         print("DEBUG: `echo` finished")
+
+        # get base cputime
+        self.lastUserCputime, self.lastKernelCputime, self.lastTotalCputime = self.get_cputime()
+
+        # get base utime and stime from /proc/pid/stat
+        self.lastUtimeStat, self.lastStimeStat = self.read_proc_pid_stat()
+
+        print("DEBUG: update_cputime finished")
         # emit signal
         self.signal_startReadStat.emit()
 
 
     def read_stat(self):
         '''read /proc/watch'''
-        print("LOG: read process stat")
-        readStatProcess = QProcess()
-        readStatProcess.start('cat', ['/proc/watch'])
-        readStatProcess.waitForFinished()
         try:
-            res = str(readStatProcess.readAll(), encoding='utf-8')
-            self.signal_resultReady.emit(res)
-        except:
-            print("ERROR: Kernel Module Error")
+            # read /proc/watch
+            print("LOG: read process stat")
+            readWatchProcess = QProcess()
+            readWatchProcess.start('cat', ['/proc/watch'])
+            readWatchProcess.waitForFinished()
+            
+            resDict = eval(str(readWatchProcess.readAll(), encoding='utf-8'))# when testbench process is not ready, this clause may throw SyntaxError
+            
+            # read /proc/pid/stat
+            utimeStat, stimeStat = self.read_proc_pid_stat()           
+            resDict['utimeProcPidStat'] = utimeStat - self.lastUtimeStat
+            resDict['stimeProcPidStat'] = stimeStat - self.lastStimeStat
+            self.lastUtimeStat = utimeStat
+            self.lastStimeStat = stimeStat
 
+            # get and update cputime
+            userCputime, kernelCputime, totalCputime = self.get_cputime()
+            resDict['userCputime'] = userCputime - self.lastUserCputime
+            resDict['kernelCputime'] = kernelCputime - self.lastKernelCputime
+            resDict['totalCputime'] = totalCputime - self.lastTotalCputime
+            self.lastUserCputime, self.lastKernelCputime, self.lastTotalCputime = userCputime, kernelCputime, totalCputime
+
+            self.signal_resultReady.emit(resDict)
+        except exception as ex:
+            if ex==SyntaxError:
+                print("DEBUG: Read nothing from /proc")
+            else:
+                print(ex)
+
+    def get_cputime(self):
+        cputimeProcess = QProcess()
+        cputimeProcess.start('cat', ['/proc/stat'])
+        cputimeProcess.waitForFinished()
+        userCputime, kernelCputime, totalCputime = self.tool_parse_cputime(str(cputimeProcess.readAll(), encoding='utf-8')) # time in ms
+        return userCputime, kernelCputime, totalCputime
+    
+    def read_proc_pid_stat(self):
+        if self.testbenchProcess is not None:
+            stat_file = open('/proc/{pid}/stat'.format(pid=self.testbenchProcess.processId()))
+            stat_content = stat_file.read().split()
+            utime = (float(stat_content[13])+float(stat_content[15]))*MILLI2JEFFIES
+            stime = (float(stat_content[14])+float(stat_content[16]))*MILLI2JEFFIES
+            return utime, stime
+        return 0, 0
+            
     def stop_watch(self):
+        self.pid = None
+        self.watchInterval = None # in ms
+        self.timer = None
+        self.testbenchProcess = None
+        
+        self.lastUserCputime = -1 # ms
+        self.lastKernelCputime = -1
+        self.lastTotalCputime = -1
+
         self.signal_stopWatch.emit()
+
+    def tool_parse_cputime(self, content: str):
+        lines = content.splitlines()
+
+        userCputime, kernelCputime, totalCputime = 0, 0, 0
+        
+        for line in lines:
+            if line[0:3] != 'cpu':
+                continue
+            cpuInfoList = line.split()
+            # print(cpuInfoList)
+            userCputime += float(cpuInfoList[1]) 
+            kernelCputime += float(cpuInfoList[3])
+            totalCputime += (userCputime+kernelCputime)
+        
+        return userCputime*MILLI2JEFFIES, kernelCputime*MILLI2JEFFIES, totalCputime*MILLI2JEFFIES
 
 class CPUWatchController(QObject):
     signal_startWatch = QtCore.pyqtSignal(str, list, int)
-    signal_resultReady = QtCore.pyqtSignal(str)
+    signal_resultReady = QtCore.pyqtSignal(dict)
     def __init__(self, parent = None):
         super(CPUWatchController, self).__init__(parent)
         
@@ -80,14 +159,14 @@ class CPUWatchController(QObject):
         self.worker.signal_resultReady.connect(self.handleResult)
         self.worker.signal_startReadStat.connect(self.start_watch)
         self.worker.signal_stopWatch.connect(self.stop_watch)
-
+        
         self.workerThread.start()
 
     def start(self, command:str, arguments:list, watchInterval:int):
         self.watchInterval = watchInterval
         self.signal_startWatch.emit(command, arguments, watchInterval)
         
-    def handleResult(self, result: str):
+    def handleResult(self, result: dict):
         self.timer.start(self.watchInterval)
         self.signal_resultReady.emit(result)
         
@@ -98,7 +177,8 @@ class CPUWatchController(QObject):
         self.timer.start(self.watchInterval)
     def stop_watch(self):
         print("LOG: stop watching")
-        QTimer.killTimer(self.timer, self.timer.timerId())
+        if self.timer is not None:
+            QTimer.killTimer(self.timer, self.timer.timerId())
 
     def __del__(self):
         self.workerThread.wait()
@@ -114,7 +194,9 @@ class WatchUI(QtWidgets.QWidget):
         # statistics
         self.pid: int = None
         self.utimeList: list = [] # ms
+        self.utimeStatList: list = []
         self.stimeList: list = [] # ms
+        self.stimeStatList: list = []
         # self.totalTimeList: list = []
         self.cpuUsageList: list = []
         self.memoryUsageList: list = []
@@ -123,7 +205,7 @@ class WatchUI(QtWidgets.QWidget):
         self.type: str = None
         self.watchInterval = None
 
-        self.csvFileName = 'result.csv'
+        self.csvFileName = 'statistics_{time}.csv'
         # UI  
         self.resize(800, 500)
         self.setWindowTitle('CPUWatch')
@@ -152,7 +234,7 @@ class WatchUI(QtWidgets.QWidget):
         # layer 3
         self.inputCommandLabel = QtWidgets.QLabel('Testbench Command (Shell):', self)
         self.inputCommandLineEdit = QtWidgets.QLineEdit(self)
-        self.inputCommandLineEdit.setText('sysbench memory --memory-block-size=4G --memory-access-mode=rnd run')
+        self.inputCommandLineEdit.setText('sysbench cpu --cpu-max-prime=1000000000 run')
         self.testIntervalLabel = QtWidgets.QLabel('Test interval (ms):', self)
         self.testIntervalLineEdit = QtWidgets.QLineEdit(self)
         self.testIntervalLineEdit.setText('500')
@@ -164,15 +246,21 @@ class WatchUI(QtWidgets.QWidget):
         self.pidLabel = QtWidgets.QLabel("Pid:", self)
         self.pidLineEdit  =QtWidgets.QLineEdit(self)
         self.pidLineEdit.setFocusPolicy(Qt.NoFocus)
-        self.watchTimeLabel = QtWidgets.QLabel("Watch time:", self)
-        self.watchTimeLineEdit = QtWidgets.QLineEdit(self)
-        self.watchTimeLineEdit.setFocusPolicy(Qt.NoFocus)
-        self.utimeLabel = QtWidgets.QLabel("User mode time (ms):", self)
+        self.cpuTimeLabel = QtWidgets.QLabel("CPU time:", self)
+        self.cpuTimeLineEdit = QtWidgets.QLineEdit(self)
+        self.cpuTimeLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.utimeLabel = QtWidgets.QLabel("User time (ms):", self)
         self.utimeLineEdit = QtWidgets.QLineEdit(self)
         self.utimeLineEdit.setFocusPolicy(Qt.NoFocus)
-        self.stimeLabel = QtWidgets.QLabel("Kernel mode time (ms):", self)
+        self.utimeStatLabel = QtWidgets.QLabel("User time /proc/pid/stat (ms):", self)
+        self.utimeStatLineEdit = QtWidgets.QLineEdit(self)
+        self.utimeStatLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.stimeLabel = QtWidgets.QLabel("Kernel time (ms):", self)
         self.stimeLineEdit = QtWidgets.QLineEdit(self)
         self.stimeLineEdit.setFocusPolicy(Qt.NoFocus)
+        self.stimeStatLabel = QtWidgets.QLabel("Kernel time /proc/pid/stat (ms):", self)
+        self.stimeStatLineEdit = QtWidgets.QLineEdit(self)
+        self.stimeStatLineEdit.setFocusPolicy(Qt.NoFocus)
         self.cpuLabel = QtWidgets.QLabel("CPU Usage(% * Num_threads):", self)
         self.cpuLineEdit = QtWidgets.QLineEdit(self)
         self.cpuLineEdit.setFocusPolicy(Qt.NoFocus)
@@ -190,9 +278,11 @@ class WatchUI(QtWidgets.QWidget):
         self.logoLabel.setPixmap(QPixmap('./LOGO.png').scaled(350,300, Qt.KeepAspectRatio, Qt.SmoothTransformation))# 图片路径
 
         self.flayout2_1.addRow(self.pidLabel, self.pidLineEdit)
-        self.flayout2_1.addRow(self.watchTimeLabel, self.watchTimeLineEdit)
+        self.flayout2_1.addRow(self.cpuTimeLabel, self.cpuTimeLineEdit)
         self.flayout2_1.addRow(self.utimeLabel, self.utimeLineEdit)
+        self.flayout2_1.addRow(self.utimeStatLabel, self.utimeStatLineEdit)
         self.flayout2_1.addRow(self.stimeLabel, self.stimeLineEdit)
+        self.flayout2_1.addRow(self.stimeStatLabel, self.stimeStatLineEdit)
         self.flayout2_1.addRow(self.cpuLabel, self.cpuLineEdit)
         self.flayout2_1.addRow(self.memoryLabel, self.memoryLineEdit)
         self.flayout2_1.addRow(self.mem2compLabel, self.mem2compLineEdit)
@@ -230,14 +320,17 @@ class WatchUI(QtWidgets.QWidget):
     def start_testbench(self):
 
         # clear statistics
-        self.pid: int = None
-        self.utimeList: list = [] # ms
-        self.stimeList: list = [] # ms
-        self.cpuUsageList: list = []
-        self.memoryUsageList: list = []
-        self.watchTimeList: list = [] # ms
-        self.mem2compList: list = []
-        self.type: str = None
+        self.pid = None
+        self.utimeList = [] # ms
+        self.utimeStatList = []
+        self.stimeList = [] # ms
+        self.stimeStatList = []
+        self.cputimeList = []
+        self.cpuUsageList = []
+        self.memoryUsageList = []
+        self.watchTimeList = [] # ms
+        self.mem2compList = []
+        self.type = None
         self.watchInterval = None
         
         # parse command
@@ -251,40 +344,48 @@ class WatchUI(QtWidgets.QWidget):
         self.watchController.start(command, arguments, watchInterval)        
         self.watchController.signal_resultReady.connect(self.update_stat)
 
-    def update_stat(self, info: str):
-        try: 
-            info_dict = eval(info)
-            print(info_dict)
-            self.pid = info_dict['pid']
+    def update_stat(self, info_dict: dict):
+        
+        print(info_dict)
+        self.pid = info_dict['pid']
 
-            utime = (info_dict['utime']+info_dict['cutime'])/NANO2MICRO
-            stime = (info_dict['stime']+info_dict['cstime'])/NANO2MICRO
-            cpuUsage = self.tool_demical_to_fraction(utime/self.watchInterval) # %
-            memoryUsage = info_dict['num_accessed_page']
-            watchTime = sum(self.watchTimeList)+self.watchInterval
-            numPagePerS = round(memoryUsage/(utime/MICRO2NROMAL), 2)
+        utime = round((info_dict['utime']+info_dict['cutime'])/NANO2MILLI, 1)
+        utimeStat = info_dict['utimeProcPidStat']
+        stime = round((info_dict['stime']+info_dict['cstime'])/NANO2MILLI, 1)
+        stimeStat = info_dict['stimeProcPidStat']
+        cpuTime = float(info_dict['userCputime']) # cputime in this interval, ms, total means user+kernel
+        cpuUsage = self.tool_demical_to_fraction(utime/cpuTime) # %
+        memoryUsage = info_dict['num_accessed_page']
+        watchTime = sum(self.watchTimeList)+self.watchInterval
+        numPagePerS = round(memoryUsage/(utime/MILLI2SECOND), 2)
 
-            self.utimeList.append(utime)
-            self.stimeList.append(stime)
-            self.watchTimeList.append(watchTime)
-            self.cpuUsageList.append(cpuUsage)
-            self.memoryUsageList.append(memoryUsage)
-            self.mem2compList.append(numPagePerS)
+        self.utimeList.append(utime)
+        self.utimeStatList.append(utimeStat)
+        self.stimeList.append(stime)
+        self.stimeStatList.append(stimeStat)
+        self.cputimeList.append(cpuTime)
+        self.watchTimeList.append(watchTime)
+        self.cpuUsageList.append(cpuUsage)
+        self.memoryUsageList.append(memoryUsage)
+        self.mem2compList.append(numPagePerS)
 
-            '''update UI'''
-            self.update_stat_UI(self.pid, watchTime, utime, stime, cpuUsage, memoryUsage, numPagePerS)
-        except:
-            pass
+        '''update UI'''
+        self.update_stat_UI(self.pid, cpuTime, utime, utimeStat, stime, stimeStat, cpuUsage, memoryUsage, numPagePerS)
+        
 
-    def update_stat_UI(self, pid, watchTime, utime, stime, cpuUsage, memoryUsage, mem2comp=None, type=None):
+    def update_stat_UI(self, pid, cpuTime, utime, utimeStat, stime, stimeStat, cpuUsage, memoryUsage, mem2comp=None, type=None):
         if pid is not None:
             self.pidLineEdit.setText(str(pid))
-        if watchTime is not None:
-            self.watchTimeLineEdit.setText(str(watchTime))
+        if cpuTime is not None:
+            self.cpuTimeLineEdit.setText(str(cpuTime))
         if utime is not None:
             self.utimeLineEdit.setText(str(utime))
+        if utimeStat is not None:
+            self.utimeStatLineEdit.setText(str(utimeStat))
         if stime is not None:
             self.stimeLineEdit.setText(str(stime))
+        if stimeStat is not None:
+            self.stimeStatLineEdit.setText(str(stimeStat))
         if cpuUsage is not None:
             self.cpuLineEdit.setText(str(cpuUsage))
         if memoryUsage is not None:
@@ -322,10 +423,11 @@ class WatchUI(QtWidgets.QWidget):
         except:
             print("ERROR: command error!")
     def to_csv(self):
-        with open(self.csvFileName, 'w') as file:
+        with open(self.csvFileName.format(time=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())), 'w') as file:
             writer = csv.writer(file)
-            writer.writerow(['executionTime']+self.watchTimeList)
-            writer.writerow(['userModeTime']+self.stimeList)
+            writer.writerow(['cpuTime']+self.watchTimeList)
+            writer.writerow(['userModeTime']+self.utimeList)
+            writer.writerow(['userModeTimeStat']+self.utimeStatList)
             writer.writerow(['cpuUsage']+self.cpuUsageList)
             writer.writerow(['memoryUsage']+self.memoryUsageList)
             writer.writerow(['PagesPerSecond']+self.mem2compList)

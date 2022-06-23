@@ -39,3 +39,8 @@ python无法使用open读取proc文件，试过改proc read函数，但是总是
 
 time unit: nanoseconds
 ![image-20220622141418806](https://michael-picgo.obs.cn-east-3.myhuaweicloud.com/image-20220622141418806.png)
+
+
+![image-20220623103100565](https://michael-picgo.obs.cn-east-3.myhuaweicloud.com/image-20220623103100565.png)
+
+获取USER_HZ=100，因此一个jeffy=10ms

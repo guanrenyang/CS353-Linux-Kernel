@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Jun 22 03:31:28 2022
+# Make data base, printed on Wed Jun 22 18:41:40 2022
 
 # Variables
 
@@ -49,7 +49,7 @@ VTE_VERSION = 6003
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:46028
+JOURNAL_STREAM = 8:56840
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -67,11 +67,11 @@ USERNAME = renyang
 # environment
 XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=0a2d1ee30d4ad2e2cd89784e62b2b04a
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 1539
+MANAGERPID = 1552
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -85,7 +85,7 @@ PATH = /home/renyang/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1749,unix/ubuntu:/tmp/.ICE-unix/1749
+SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1760,unix/ubuntu:/tmp/.ICE-unix/1760
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -103,7 +103,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 134f1aa51edc4d4e982ceecb8b1699ee
+INVOCATION_ID = 3c683bc73ff243c0bb9c6c14a5a71595
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/99/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -127,7 +127,7 @@ PWD = /home/renyang/CS353-Linux-Kernel/FinalProject
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1714
+SSH_AGENT_PID = 1725
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -181,7 +181,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-ab9fbeaf-6e72-4f9a-96d5-f00c2995e694.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-11614ccc-136a-4a0a-9aba-0d74fb2c6f5c.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -196,6 +196,8 @@ XDG_CURRENT_DESKTOP = Unity
 %D = $(patsubst %/,%,$(dir $%))
 # default
 MAKE_COMMAND := make
+# environment
+OLDPWD = /home/renyang/Desktop
 # default
 .VARIABLES := 
 # automatic
@@ -227,13 +229,13 @@ SNAP_NAME = code
 # environment
 LC_ALL = C
 # environment
-DBUS_STARTER_BUS_TYPE = session
+GJS_DEBUG_TOPICS = JS ERROR;JS LOG
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/a2f16da2_d022_45a8_9abd_a4968c46017b
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/144d1bdb_8a00_4f91_b959_c8eba0e8188b
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.1670
+GNOME_TERMINAL_SERVICE = :1.114
 # default
 SUFFIXES := 
 # environment
@@ -244,6 +246,8 @@ CHROME_DESKTOP = code-url-handler.desktop
 WINDOWPATH = 2
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# environment
+GJS_DEBUG_OUTPUT = stderr
 # default
 .RECIPEPREFIX := 
 # environment
@@ -251,11 +255,9 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 38278
-# environment
-DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=0a2d1ee30d4ad2e2cd89784e62b2b04a
+VSCODE_PID = 2864
 # variable set hash-table stats:
-# Load=122/1024=12%, Rehash=0, Collisions=15/155=10%
+# Load=123/1024=12%, Rehash=0, Collisions=15/156=10%
 
 # Pattern-specific Variable Values
 
@@ -263,9 +265,9 @@ DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=0a2d1ee30d4ad2e2cd89784
 
 # Directories
 
-# . (device 2053, inode 3540293): 11 files, no impossibilities.
+# . (device 2053, inode 3540293): 12 files, no impossibilities.
 
-# 11 files, no impossibilities in 1 directories.
+# 12 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -275,6 +277,7 @@ DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=0a2d1ee30d4ad2e2cd89784
 
 # 'override' directive
 all: .SHELLSTATUS := 0
+ 
 all:
 #  Command line target.
 #  Implicit rule search has not been done.
@@ -314,7 +317,6 @@ Makefile:
 #  Implicit rule search has been done.
 #  Last modified 2022-06-21 02:04:08.184178876
 #  File has been updated.
- 
 #  Successfully updated.
 
 # Not a target:
@@ -338,12 +340,12 @@ clean:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 17 / storage = 162 B / avg = 9 B
-# current buf: size = 8162 B / used = 162 B / count = 17 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 18 / storage = 173 B / avg = 9 B
+# current buf: size = 8162 B / used = 173 B / count = 18 / avg = 9 B
 
-# strcache performance: lookups = 25 / hit rate = 32%
+# strcache performance: lookups = 26 / hit rate = 30%
 # hash-table stats:
-# Load=17/8192=0%, Rehash=0, Collisions=1/25=4%
-# Finished Make data base on Wed Jun 22 03:31:28 2022
+# Load=18/8192=0%, Rehash=0, Collisions=1/26=4%
+# Finished Make data base on Wed Jun 22 18:41:40 2022
 
  
