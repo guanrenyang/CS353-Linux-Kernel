@@ -1,3 +1,4 @@
+from ast import arguments
 from logging import exception
 from time import sleep
 from PyQt5 import QtCore, QtWidgets
@@ -127,18 +128,13 @@ class CPUWatchWorker(QObject):
         self.signal_stopWatch.emit()
 
     def tool_parse_cputime(self, content: str):
-        lines = content.splitlines()
-
-        userCputime, kernelCputime, totalCputime = 0, 0, 0
+        line = content.splitlines()[0]
         
-        for line in lines:
-            if line[0:3] != 'cpu':
-                continue
-            cpuInfoList = line.split()
-            # print(cpuInfoList)
-            userCputime += float(cpuInfoList[1]) 
-            kernelCputime += float(cpuInfoList[3])
-            totalCputime += (userCputime+kernelCputime)
+        cpuInfoList = line.split()
+        # print(cpuInfoList)
+        userCputime = float(cpuInfoList[1]) 
+        kernelCputime = float(cpuInfoList[3])
+        totalCputime = (userCputime+kernelCputime)
         
         return userCputime*MILLI2JEFFIES, kernelCputime*MILLI2JEFFIES, totalCputime*MILLI2JEFFIES
 
@@ -205,7 +201,8 @@ class WatchUI(QtWidgets.QWidget):
         self.type: str = None
         self.watchInterval = None
 
-        self.csvFileName = 'statistics_{time}.csv'
+        self.csvFileName = 'statistics_{arguments}.csv'
+        self.filenameArguments = None
         # UI  
         self.resize(800, 500)
         self.setWindowTitle('CPUWatch')
@@ -234,10 +231,10 @@ class WatchUI(QtWidgets.QWidget):
         # layer 3
         self.inputCommandLabel = QtWidgets.QLabel('Testbench Command (Shell):', self)
         self.inputCommandLineEdit = QtWidgets.QLineEdit(self)
-        self.inputCommandLineEdit.setText('sysbench cpu --cpu-max-prime=1000000000 run')
+        self.inputCommandLineEdit.setText('sysbench cpu --time=100 --threads=1 run')
         self.testIntervalLabel = QtWidgets.QLabel('Test interval (ms):', self)
         self.testIntervalLineEdit = QtWidgets.QLineEdit(self)
-        self.testIntervalLineEdit.setText('500')
+        self.testIntervalLineEdit.setText('10')
         self.vlayout2_0.addWidget(self.inputCommandLabel)
         self.vlayout2_0.addWidget(self.inputCommandLineEdit)
         self.vlayout2_0.addWidget(self.testIntervalLabel)
@@ -261,7 +258,7 @@ class WatchUI(QtWidgets.QWidget):
         self.stimeStatLabel = QtWidgets.QLabel("Kernel time /proc/pid/stat (ms):", self)
         self.stimeStatLineEdit = QtWidgets.QLineEdit(self)
         self.stimeStatLineEdit.setFocusPolicy(Qt.NoFocus)
-        self.cpuLabel = QtWidgets.QLabel("CPU Usage(% * Num_threads):", self)
+        self.cpuLabel = QtWidgets.QLabel("CPU Usage(%):", self)
         self.cpuLineEdit = QtWidgets.QLineEdit(self)
         self.cpuLineEdit.setFocusPolicy(Qt.NoFocus)
         self.memoryLabel = QtWidgets.QLabel("Memory usage (Num of pages)", self)
@@ -335,6 +332,8 @@ class WatchUI(QtWidgets.QWidget):
         
         # parse command
         command, arguments, watchInterval = self.tool_parse_command()
+        
+        self.filenameArguments = '_'.join(arguments)
 
         # start a new thread to run testbench and watching
         # watchProcessControl = CPUWatchWorker(watchInterval, self)
@@ -408,7 +407,7 @@ class WatchUI(QtWidgets.QWidget):
         labelStyles = {'color':'black', 'font-size':'15px'}
         self.lineChart.setTitle(title, **{'color':'black', 'font-size':'20px'})
         self.lineChart.setLabel('left', yLabel, **labelStyles)
-        self.lineChart.setLabel('bottom', 'Watch Time (ms)', **labelStyles)
+        self.lineChart.setLabel('bottom', 'Watch Point', **labelStyles)
     
         self.lineChart.plot(xData, yData, pen=(1,1))
         
@@ -423,8 +422,9 @@ class WatchUI(QtWidgets.QWidget):
         except:
             print("ERROR: command error!")
     def to_csv(self):
-        with open(self.csvFileName.format(time=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())), 'w') as file:
+        with open(self.csvFileName.format(arguments=self.filenameArguments), 'w') as file:
             writer = csv.writer(file)
+            writer.writerow(['watchPoint']+list(range(1, len(self.watchTimeList)+1)))
             writer.writerow(['cpuTime']+self.watchTimeList)
             writer.writerow(['userModeTime']+self.utimeList)
             writer.writerow(['userModeTimeStat']+self.utimeStatList)

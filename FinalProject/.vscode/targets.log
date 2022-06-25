@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Jun 22 18:41:40 2022
+# Make data base, printed on Sat Jun 25 11:30:10 2022
 
 # Variables
 
@@ -49,7 +49,7 @@ VTE_VERSION = 6003
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:56840
+JOURNAL_STREAM = 8:53851
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -71,7 +71,7 @@ DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 1552
+MANAGERPID = 1572
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -85,7 +85,7 @@ PATH = /home/renyang/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1760,unix/ubuntu:/tmp/.ICE-unix/1760
+SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1780,unix/ubuntu:/tmp/.ICE-unix/1780
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -103,7 +103,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 3c683bc73ff243c0bb9c6c14a5a71595
+INVOCATION_ID = 5fe91cc8d9774007a506beb7041d6fb3
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/99/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -127,7 +127,7 @@ PWD = /home/renyang/CS353-Linux-Kernel/FinalProject
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1725
+SSH_AGENT_PID = 1745
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -181,7 +181,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-11614ccc-136a-4a0a-9aba-0d74fb2c6f5c.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-6702c23b-5781-4016-bf6e-4391c2e3af59.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -231,11 +231,11 @@ LC_ALL = C
 # environment
 GJS_DEBUG_TOPICS = JS ERROR;JS LOG
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/144d1bdb_8a00_4f91_b959_c8eba0e8188b
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/8981f31e_588f_46d0_a419_baafac80d8f5
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.114
+GNOME_TERMINAL_SERVICE = :1.337
 # default
 SUFFIXES := 
 # environment
@@ -255,7 +255,7 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 2864
+VSCODE_PID = 125157
 # variable set hash-table stats:
 # Load=123/1024=12%, Rehash=0, Collisions=15/156=10%
 
@@ -265,9 +265,9 @@ VSCODE_PID = 2864
 
 # Directories
 
-# . (device 2053, inode 3540293): 12 files, no impossibilities.
+# . (device 2053, inode 3540293): 29 files, no impossibilities.
 
-# 12 files, no impossibilities in 1 directories.
+# 29 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -340,12 +340,12 @@ clean:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 18 / storage = 173 B / avg = 9 B
-# current buf: size = 8162 B / used = 173 B / count = 18 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 35 / storage = 491 B / avg = 14 B
+# current buf: size = 8162 B / used = 491 B / count = 35 / avg = 14 B
 
-# strcache performance: lookups = 26 / hit rate = 30%
+# strcache performance: lookups = 43 / hit rate = 18%
 # hash-table stats:
-# Load=18/8192=0%, Rehash=0, Collisions=1/26=4%
-# Finished Make data base on Wed Jun 22 18:41:40 2022
+# Load=35/8192=0%, Rehash=0, Collisions=2/43=5%
+# Finished Make data base on Sat Jun 25 11:30:10 2022
 
  

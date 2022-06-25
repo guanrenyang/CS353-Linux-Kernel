@@ -139,24 +139,7 @@ static unsigned long long get_accessed_page_num(struct task_struct *taskp){
     struct vm_area_struct *vmap = taskp->mm->mmap;
     unsigned long addr;
 
-    while (vmap!=NULL)
-    {
-        for (addr = vmap->vm_start; addr < vmap->vm_end; addr += PAGE_SIZE)
-        {
-            ptep = find_pte_from_address(vmap, addr);
-            res = my_ptep_test_and_clear_young(ptep);
-            sum+=res;
-
-            // to calculate the number of valid/invalid ptes
-            if (pte_none(*ptep)) {   
-                num_pte_none++;
-            }
-            else {
-                num_pte_valid++;
-            }
-        }
-        vmap = vmap->vm_next;
-    }
+     
 
     return sum;
 }
