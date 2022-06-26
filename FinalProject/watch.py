@@ -9,7 +9,7 @@ from PyQt5.QtGui import QPixmap
 import sys
 import pyqtgraph
 import csv
-import time
+import pandas as pd
 
 NANO2MILLI = 1000000
 MILLI2SECOND = 1000
@@ -93,11 +93,13 @@ class CPUWatchWorker(QObject):
             self.lastUserCputime, self.lastKernelCputime, self.lastTotalCputime = userCputime, kernelCputime, totalCputime
 
             self.signal_resultReady.emit(resDict)
-        except exception as ex:
-            if ex==SyntaxError:
-                print("DEBUG: Read nothing from /proc")
-            else:
-                print(ex)
+        except :
+            # if ex==SyntaxError:
+            #     print("DEBUG: Read nothing from /proc")
+            # else:
+            #     print(ex)
+            pass
+
 
     def get_cputime(self):
         cputimeProcess = QProcess()
@@ -231,7 +233,7 @@ class WatchUI(QtWidgets.QWidget):
         # layer 3
         self.inputCommandLabel = QtWidgets.QLabel('Testbench Command (Shell):', self)
         self.inputCommandLineEdit = QtWidgets.QLineEdit(self)
-        self.inputCommandLineEdit.setText('sysbench cpu --time=100 --threads=1 run')
+        self.inputCommandLineEdit.setText('sysbench memory --time=100 --threads=1 --memory-block-size=4G --memory-access-mode=rnd run')
         self.testIntervalLabel = QtWidgets.QLabel('Test interval (ms):', self)
         self.testIntervalLineEdit = QtWidgets.QLineEdit(self)
         self.testIntervalLineEdit.setText('10')
@@ -432,6 +434,9 @@ class WatchUI(QtWidgets.QWidget):
             writer.writerow(['memoryUsage']+self.memoryUsageList)
             writer.writerow(['PagesPerSecond']+self.mem2compList)
 
+        df = pd.read_csv(self.csvFileName.format(arguments=self.filenameArguments))
+        df.T.to_csv(self.csvFileName.format(arguments=self.filenameArguments))
+
     def tool_demical_to_fraction(self, origin:float):
         return round(origin*100, 2)
 
@@ -484,8 +489,10 @@ class Controller(QObject):
     def result(self, s):
         print(s)
     def threadOK(self):
-        self.workerThread.wait()
-        self.workerThread.quit()
+        print("quit worker thread")
+        # self.workerThread.wait()
+        self.workerThread.terminate()
+        sys.exit(0)
     def display(self):
         print(self.workerThread.isRunning())
 if __name__ == '__main__':

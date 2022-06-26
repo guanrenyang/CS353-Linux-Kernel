@@ -139,6 +139,21 @@ static unsigned long long get_accessed_page_num(struct task_struct *taskp){
     struct vm_area_struct *vmap = taskp->mm->mmap;
     unsigned long addr;
 
+    while (vmap!=NULL) // traverse the linked array
+    {
+        // find all pages in a VMA (a for loop with step `PAGE_SIZE`(4096))
+        for (addr = vmap->vm_start; addr < vmap->vm_end; addr += PAGE_SIZE)
+        {
+            // transform `addr`(unsigned int) to `pte`(pte_t)
+            ptep = find_pte_from_address(vmap, addr);
+            // read the `young` bit and set it to 0
+            res = my_ptep_test_and_clear_young(ptep);
+            // count 
+            sum+=res;
+            // ... other codes for debugging
+        }
+        vmap = vmap->vm_next;
+    }
      
 
     return sum;

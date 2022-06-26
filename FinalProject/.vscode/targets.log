@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat Jun 25 11:30:10 2022
+# Make data base, printed on Sat Jun 25 22:29:46 2022
 
 # Variables
 
@@ -49,7 +49,7 @@ VTE_VERSION = 6003
 # environment
 VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:53851
+JOURNAL_STREAM = 8:58539
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -67,11 +67,11 @@ USERNAME = renyang
 # environment
 XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=8bec20fa1cdfe3d6c156058d62b7ccae
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 1572
+MANAGERPID = 1519
 # environment
 LESSOPEN = | /usr/bin/lesspipe %s
 # environment
@@ -85,7 +85,7 @@ PATH = /home/renyang/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1780,unix/ubuntu:/tmp/.ICE-unix/1780
+SESSION_MANAGER = local/ubuntu:@/tmp/.ICE-unix/1729,unix/ubuntu:/tmp/.ICE-unix/1729
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -103,7 +103,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 5fe91cc8d9774007a506beb7041d6fb3
+INVOCATION_ID = aaa4e6df83ad480eb9e00d16b2127f07
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/99/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -127,7 +127,7 @@ PWD = /home/renyang/CS353-Linux-Kernel/FinalProject
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1745
+SSH_AGENT_PID = 1694
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -181,7 +181,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-6702c23b-5781-4016-bf6e-4391c2e3af59.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-d7f5f2ee-4a84-4699-8261-eca0c29a380c.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -196,8 +196,6 @@ XDG_CURRENT_DESKTOP = Unity
 %D = $(patsubst %/,%,$(dir $%))
 # default
 MAKE_COMMAND := make
-# environment
-OLDPWD = /home/renyang/Desktop
 # default
 .VARIABLES := 
 # automatic
@@ -229,13 +227,13 @@ SNAP_NAME = code
 # environment
 LC_ALL = C
 # environment
-GJS_DEBUG_TOPICS = JS ERROR;JS LOG
+DBUS_STARTER_BUS_TYPE = session
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/8981f31e_588f_46d0_a419_baafac80d8f5
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/e3dcee87_b8f6_4779_afbe_9634e38cba16
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.337
+GNOME_TERMINAL_SERVICE = :1.724
 # default
 SUFFIXES := 
 # environment
@@ -246,8 +244,6 @@ CHROME_DESKTOP = code-url-handler.desktop
 WINDOWPATH = 2
 # default
 .INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
-# environment
-GJS_DEBUG_OUTPUT = stderr
 # default
 .RECIPEPREFIX := 
 # environment
@@ -255,9 +251,11 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 125157
+VSCODE_PID = 718771
+# environment
+DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=8bec20fa1cdfe3d6c156058d62b7ccae
 # variable set hash-table stats:
-# Load=123/1024=12%, Rehash=0, Collisions=15/156=10%
+# Load=122/1024=12%, Rehash=0, Collisions=15/155=10%
 
 # Pattern-specific Variable Values
 
@@ -265,9 +263,9 @@ VSCODE_PID = 125157
 
 # Directories
 
-# . (device 2053, inode 3540293): 29 files, no impossibilities.
+# . (device 2053, inode 3540293): 39 files, no impossibilities.
 
-# 29 files, no impossibilities in 1 directories.
+# 39 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -277,9 +275,9 @@ VSCODE_PID = 125157
 
 # 'override' directive
 all: .SHELLSTATUS := 0
- 
 all:
 #  Command line target.
+ 
 #  Implicit rule search has not been done.
 #  Implicit/static pattern stem: ''
 #  File does not exist.
@@ -340,12 +338,12 @@ clean:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 35 / storage = 491 B / avg = 14 B
-# current buf: size = 8162 B / used = 491 B / count = 35 / avg = 14 B
+# strcache buffers: 1 (0) / strings = 45 / storage = 1360 B / avg = 30 B
+# current buf: size = 8162 B / used = 1360 B / count = 45 / avg = 30 B
 
-# strcache performance: lookups = 43 / hit rate = 18%
+# strcache performance: lookups = 53 / hit rate = 15%
 # hash-table stats:
-# Load=35/8192=0%, Rehash=0, Collisions=2/43=5%
-# Finished Make data base on Sat Jun 25 11:30:10 2022
+# Load=45/8192=1%, Rehash=0, Collisions=2/53=4%
+# Finished Make data base on Sat Jun 25 22:29:46 2022
 
  
